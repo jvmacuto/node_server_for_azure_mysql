@@ -2,6 +2,7 @@ const express = require("express");
 const mysql = require("mysql2");
 const fs = require("fs");
 require("dotenv").config();
+const cors = require("cors");
 
 const app = express();
 
@@ -12,11 +13,14 @@ const pool = mysql.createPool({
   password: process.env.MYSQL_PASSWORD, //password for root user in mysql
   database: process.env.MYSQL_DATABASE, //name of the database you want to query
   port: 3306,
-  ssl:{ca:fs.readFileSync("./DigiCertGlobalRootCA.crt.pem")},
+  ssl: { ca: fs.readFileSync("./DigiCertGlobalRootCA.crt.pem") },
   waitForConnections: true, //if want to allow people to queue for connection spots
   connectionLimit: 10, // number of available connection spots
   queueLimit: 0, //how many people can queue for a connection spot- if 0 as many people as needed can queue
 });
+
+//use this one first
+app.use(cors({ origin: process.env.CLIENT_HOST }));
 
 //========== ENDPOINTS ============//
 //Root endpoint: return all countries
@@ -27,7 +31,6 @@ app.get("/", (req, res) => {
     res.send(result);
   });
 });
-
 
 //get a list of countries that belong in Oceania
 app.get("/oceania", (req, res) => {
@@ -55,7 +58,6 @@ app.get("/country/:countryname", (req, res) => {
   );
 });
 
-
 //Find the total population of a continent
 app.get("/population/:continent", (req, res) => {
   console.log("/population/:continent endpoint was hit 🎯");
@@ -71,8 +73,6 @@ app.get("/population/:continent", (req, res) => {
     res.send(`The total population of ${continent} is ${result[0].sum}`);
   });
 });
-
-
 
 //========== PORT ============//
 const PORT = process.env.PORT;
